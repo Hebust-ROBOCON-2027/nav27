@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<root BTCPP_format="4">
+
+  <!-- ================== PICK 子树（瘦身版）==================
+       PICK 只做到"抓取"为止：对齐 + 开泵 + 视觉抓取(ArmTask)。
+       抓取后的机械臂收尾（lift/stow/place/hold）全部搬到紧跟的 MOVE 子树，
+       让收尾与爬楼梯并行。
+         - pick_count 自增，用来在 MOVE 里区分第几块（第1块放置、第2块举着）。
+         - need_finish 置 1，告诉下一个 MOVE "我刚抓完，请做收尾"。 -->
+  <BehaviorTree ID="PickAtBlock">
+    <Sequence>
+      <!-- 导航到 prep || 臂 prep 兜底排队，二者并行
+           - 导航：MOVE 段 C 已经走过则 IsPrepSkippable 通过，不再重复发 goal；
+                   首次 PICK 前面没有 MOVE 时由这里兜底导航
+           - 臂 prep：MOVE 段 C 已经为本次 PICK 排队（arm_prep_queued==1）则跳过；
+                     首次 PICK 前无 MOVE 时由这里排队 -->
+      <ParallelAll max_failures="1">
+        <Fallback>
+          <IsPrepSkippable node="{node}"
+                           target_x="{prep_x}" target_y="{prep_y}" target_yaw="{prep_yaw}"
+                           x_tolerance="0.05" y_tolerance="0.05" yaw_tolerance="0.1"/>
+          <Sequence>
+            <!-- 与上一次 prep_yaw 相差 ≥ 0.26rad (~15°)：先回 from 中心 pivot -->
+            <Fallback>
+              <Sequence>
+                <ScriptCondition code="prep_yaw - last_prep_yaw &lt; 0.26"/>
+                <ScriptCondition code="prep_yaw - last_prep_yaw &gt; -0.26"/>
+              </Sequence>
+              <Sequence>
+                <GetBlockCenter block_id="{from_id}" block_yaml="{block_yaml}"
+                                center_x="{center_x}" center_y="{center_y}"/>
+                <PublishGoal node="{node}"
+                             x="{center_x}" y="{center_y}" yaw="{prep_yaw}"
+                             frame_id="map" goal="{nav_goal}"/>
+              </Sequence>
+            </Fallback>
+            <PublishGoal node="{node}"
+                         x="{prep_x}" y="{prep_y}" yaw="{prep_yaw}"
+                         frame_id="map" goal="{nav_goal}"/>
+            <Script code="last_prep_yaw := prep_yaw"/>
+          </Sequence>
+        </Fallback>
+        <Sequence>
+          <DelayMs delay_msec="500"><AlwaysSuccess/></DelayMs>
+          <ForceSuccess>
+            <Fallback>
+              <ScriptCondition code="arm_prep_queued == 1"/>
+              <Sequence>
+                <SelectArmPrepName next_from_id="{from_id}"
+                                  next_target_id="{target_id}"
+                                  from_x_override="{prep_x}"
+                                  from_y_override="{prep_y}"
+                                  from_yaw_override="{prep_yaw}"
+                                  arm_prep_name="{arm_prep_name}"
+                                  block_yaml="{block_yaml}"/>
+                <ArmMoveNamedAsync pose_name="{arm_prep_name}" task_id="1" duration="1.0"/>
+              </Sequence>
+            </Fallback>
+          </ForceSuccess>
+        </Sequence>
+      </ParallelAll>
+      <Script code="arm_prep_queued := 0"/>
+
+      <!-- 等上一段 MOVE 后台跑的 arm prep 收尾，确保臂到位再发 PICK 的 ArmTask -->
+      <WaitArmIdle timeout="20.0"/>
+
+      <!-- 进入 PICK 即自增计数：第一次 -> 1，第二次 -> 2 -->
+      <Script code="pick_count += 1"/>
+
+      <!-- ===== 对齐 + 开泵 + 视觉抓取 ===== -->
+      <!-- PublishGoal 已移到上一步 MOVE 上完台阶后按 next_step_type==PICK 条件下发 -->
+      <!-- <PreSteerAlign node="{node}" vx="0.1" duration="0.01" publish_rate_hz="50"/> -->
+      <!-- <ArmMoveNamed node="{node}"
+                    pose_name="pick_front_up200"
+                    server_name="robotic_task"
+                    task_id="1"
+                    duration="1.5"/> -->
+      <PublishPumpCmd node="{node}" command="1"/>
+      <!-- TF 时断时续（爬台阶后定位偶发短暂断档）：每次 ArmTask 给 tf_timeout=1s 窗口，
+           查不到就在节点内打印是哪一段断了(map->odom / odom->base_link)并返回 FAILURE，
+           RetryUntilSuccessful 再 tick 重试。10 次 ≈ 10s，够等定位自愈；
+           想无限重试改 num_attempts="-1"。 -->
+      <RetryUntilSuccessful num_attempts="100">
+        <ArmTask node="{node}"
+                 task_id="2"
+                 server_name="robotic_task"
+                 base_frame="base_link"
+                 target_frame="target_object"
+                 map_frame="map"
+                 tf_timeout="5.0"
+                 cube_x="{cube_x}"
+                 cube_y="{cube_y}"
+                 block_height="{block_h}"
+                 grasp_height="{block_h}"
+                 goal_data="{arm_goal_data}"
+                 err_code="{arm_err_code}"
+                 reason="{arm_reason}"/>
+      </RetryUntilSuccessful>
+
+      <!-- 抓取成功，标记下一个 MOVE 需要做收尾（放块/举着）。
+           若 ArmTask 失败，Sequence 在此之前已返回 FAILURE，不会置位。 -->
+      <Script code="need_finish := 1"/>
+    </Sequence>
+  </BehaviorTree>
+
+</root>

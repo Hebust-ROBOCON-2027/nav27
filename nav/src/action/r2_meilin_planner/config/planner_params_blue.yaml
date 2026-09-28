@@ -1,0 +1,68 @@
+# R2 梅林规划器调参文件【蓝区】
+# 被 kfs_subscriber_node 读取，驱动 A* 路径规划的代价与红蓝区选择。
+kfs_subscriber_node:
+  ros__parameters:
+    # 赛区选择：red / blue
+    zone: "blue"
+
+    # 基础动作代价
+    move_cost: 1.0        # 平移一格的基础代价
+    descend_200_cost: 0.2 # 下台阶 高度差落在 [-0.2, 0) 的额外代价
+    descend_400_cost: 0.4 # 下台阶 高度差落在 [-0.4, -0.2) 的额外代价
+    pick_cost: 2.0        # 抓取一个 R2 KFS
+    push_cost: 1.0        # 推走挡路 KFS
+
+    # 爬高代价
+    climb_200_cost: 1.5   # 高度差 (0, 0.2] m
+    climb_400_cost: 1.0  # 高度差 (0.2, 0.4] m，仅当 can_climb_400=true 生效
+
+    # 转弯代价：每转 90° 加一次，掉头 180°=2×。
+    turn_cost: 4.0
+
+    # 400 台阶开关：
+    can_climb_400: true
+
+    # 抓取偏好列代价减免（柔性偏好）：抓机器人物理左手列（红 {3,6,9,12} / 蓝 {1,4,7,10}）
+    # 时从 pick_cost 里减去此值。默认 1.5 ≈ 1 个 move+climb_200 的代价，
+    # 表示愿意为去左手列多走 1 格台阶。设 0 关闭；调大几乎硬选左手列。
+    preferred_column_pick_bonus: 3.0
+
+    # 高度开关：true 时忽略台阶高度（升/降代价清零、强制可上 400）。
+    ignore_height: false
+
+    # --- R1 块定时消失 ---
+    # 把下位机码1的 R1 块（R1 正在收取的目标）建模为"会随时间让开的硬障碍"：
+    # 未消失前 R2 不能踩，可原地等待(WAIT)；消失后正常通行。
+    # false（默认）时码1仍当空地，规划行为与历史一致。
+    r1_timed_removal_enable: false
+    # R2 每走几步 R1 消失一个（所有动作 MOVE/PICK/PUSH/WAIT 都算一步）。
+    # 600 高度（节点6、8）最先消失，其余按高度降序假设顺序。
+    r1_removal_steps: 10
+    # 原地等待一步(WAIT)的代价。默认 = move_cost(1.0)；调大→更倾向绕路而非干等。
+    wait_cost: 3.0
+
+    # 准备位姿偏移量（米）：准备点 = 目标中心沿单轴退此距离，越小越靠近目标。
+    move_prep_offset: 0.15   # MOVE 准备点
+    grasp_prep_offset: 0.17  # PICK / PUSH 准备点
+
+    # PICK / PUSH 发布的 block_height 偏移（米）：
+    # block_height = (target.height - from.height) + block_height_offset
+    # 仅影响发布给下游的字段，不参与 A* 代价计算。
+    block_height_offset: -0.09
+
+    # PICK / PUSH 发布的 prep_pose.theta 偏移（弧度），左右两档共用：
+    # 默认 0.0；前/左档 = 0 + offset，右档 = -pi/2 + offset。
+    grasp_prep_theta_offset: 0.0
+
+    # MOVE 发布的 prep_pose.theta 偏移（弧度）：
+    # 默认 0.0；正值整体逆时针偏，负值顺时针偏。turn_deg 用未偏移值计算，不被污染。
+    move_prep_theta_offset: 0.0
+
+    # block_*.yaml 全局坐标偏移（米）——补偿系统性定位误差。
+    # 加载时一次性叠加到所有方块上，不修改 yaml 原文件。
+    #   map_x/y_offset  → 每块的中心坐标 x/y（影响 prep_pose）
+    #   cube_x/y_offset → 每块上 KFS 的抓取坐标 cube_x/cube_y（影响 PICK/PUSH 目标）
+    map_x_offset: 0.0
+    map_y_offset: 0.0
+    cube_x_offset: 0.0
+    cube_y_offset: 0.0

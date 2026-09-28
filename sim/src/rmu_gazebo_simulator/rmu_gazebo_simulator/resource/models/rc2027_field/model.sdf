@@ -1,0 +1,290 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <model name="rc2027_field">
+    <static>true</static>
+    <pose>0 0 0 0 0 0</pose>
+
+    <link name="field_link">
+      <!-- ============================================================ -->
+      <!-- Visual: High-precision textured 3D mesh (Collada DAE)        -->
+      <!-- ============================================================ -->
+      <visual name="field_visual">
+        <geometry>
+          <mesh>
+            <uri>model://rc2027_field/meshes/rc2027_field.dae</uri>
+          </mesh>
+        </geometry>
+        <cast_shadows>false</cast_shadows>
+      </visual>
+
+      <!-- ============================================================ -->
+      <!-- Collisions: Fully articulated rigid primitives               -->
+      <!-- ============================================================ -->
+
+      <!-- 1. Ground floor (11.1m x 11.1m, top surface at z=0.025m)    -->
+      <collision name="col_ground">
+        <pose>0 0 0.0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>11.100 11.100 0.050</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
+      <!-- 2. Outer Perimeter Fences (4 sides, height=0.10m)           -->
+      <collision name="col_fence_n">
+        <pose>0 5.525 0.075 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>11.100 0.050 0.100</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_fence_s">
+        <pose>0 -5.525 0.075 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>11.100 0.050 0.100</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_fence_e">
+        <pose>5.525 0 0.075 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.050 11.100 0.100</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_fence_w">
+        <pose>-5.525 0 0.075 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.050 11.100 0.100</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <!-- 3. Level 1 Platform (6.0m x 6.0m, top surface at z=0.625m)  -->
+      <collision name="col_l1">
+        <pose>0 0 0.325 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>6.000 6.000 0.600</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
+      <!-- 4. L1 Perimeter Barriers (4 sides)                          -->
+      <collision name="col_l1fence_n">
+        <pose>0 2.975 0.675 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>6.000 0.050 0.100</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_l1fence_s">
+        <pose>0 -2.975 0.675 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>6.000 0.050 0.100</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_l1fence_e">
+        <pose>2.975 0 0.675 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.050 5.900 0.100</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_l1fence_w">
+        <pose>-2.975 0 0.675 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.050 5.900 0.100</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <!-- 5. Level 2 Platform (3.0m x 3.0m, top surface at z=0.925m)  -->
+      <collision name="col_l2">
+        <pose>0 0 0.775 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>3.000 3.000 0.300</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
+      <!-- 6. L2 Access Stairs (Red & Blue, from L1 to L2)              -->
+      <collision name="col_l2stair_red">
+        <pose>-1.65 0 0.700 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.300 1.000 0.150</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_l2stair_blue">
+        <pose>1.65 0 0.700 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.300 1.000 0.150</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <!-- 7. Transition Zone Red (West x in [-4, -3], y in [-2.7, 2.7])-->
+      <collision name="col_band_red_plat">
+        <pose>-3.5 -1.300 0.325 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.000 1.000 0.600</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_band_red_step1">
+        <pose>-3.5 -2.550 0.0875 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.000 0.300 0.150</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_band_red_step2">
+        <pose>-3.5 -2.250 0.1625 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.000 0.300 0.325</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_band_red_step3">
+        <pose>-3.5 -1.950 0.2375 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.000 0.300 0.475</size>
+          </box>
+        </geometry>
+      </collision>
+      <!-- Red ramp (9.74 deg slope, length 3.55m, allows climbing)   -->
+      <collision name="col_band_red_ramp">
+        <pose>-3.5 0.9460 0.3004 -0.16978 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.000 3.551 0.050</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.2</mu>
+              <mu2>1.2</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
+      <!-- 8. Transition Zone Blue (East x in [3, 4], y in [-2.7, 2.7]) -->
+      <collision name="col_band_blue_plat">
+        <pose>3.5 -1.300 0.325 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.000 1.000 0.600</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_band_blue_step1">
+        <pose>3.5 -2.550 0.0875 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.000 0.300 0.150</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_band_blue_step2">
+        <pose>3.5 -2.250 0.1625 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.000 0.300 0.325</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_band_blue_step3">
+        <pose>3.5 -1.950 0.2375 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.000 0.300 0.475</size>
+          </box>
+        </geometry>
+      </collision>
+      <!-- Blue ramp (9.74 deg slope, length 3.55m, allows climbing)  -->
+      <collision name="col_band_blue_ramp">
+        <pose>3.5 0.9460 0.3004 -0.16978 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.000 3.551 0.050</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.2</mu>
+              <mu2>1.2</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
+      <!-- 9. Pillars                                                  -->
+      <!-- Center Pillar (h=0.80m, radius=0.135m, top z=1.725m)       -->
+      <collision name="col_pillar_centre">
+        <pose>0 0 1.325 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.135</radius>
+            <length>0.800</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <!-- Mustika Pillar (h=0.40m, radius=0.135m, at (0, 4.25))       -->
+      <collision name="mustika_pillar_col">
+        <pose>0 4.25 0.225 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.135</radius>
+            <length>0.400</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+    </link>
+  </model>
+</sdf>

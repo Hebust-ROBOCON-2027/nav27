@@ -1,0 +1,196 @@
+# RC 2027 Field Assembly Material Library
+
+newmtl mat_1区栅栏
+Kd 0.3922 0.2431 0.0000
+d 1.0000
+illum 2
+
+newmtl mat_1区储存区-蓝
+Kd 0.1961 0.0000 1.0000
+d 1.0000
+illum 2
+
+newmtl mat_1区启动区-蓝
+Kd 0.1961 0.0000 1.0000
+d 1.0000
+illum 2
+
+newmtl mat_天空块-红-1
+Kd 0.8745 0.1333 0.1333
+d 1.0000
+illum 2
+
+newmtl mat_红1区
+Kd 0.9412 0.8235 0.8235
+d 1.0000
+illum 2
+
+newmtl mat_蓝1区
+Kd 0.6667 0.8235 0.9020
+d 1.0000
+illum 2
+
+newmtl mat_1区启动区-红
+Kd 0.8745 0.1333 0.1333
+d 1.0000
+illum 2
+
+newmtl mat_1区储存区-红
+Kd 0.8745 0.1333 0.1333
+d 1.0000
+illum 2
+
+newmtl mat_1区-地面共享区
+Kd 0.9608 0.9412 0.7843
+d 1.0000
+illum 2
+
+newmtl mat_1区-地面附加共享区
+Kd 0.9608 0.9412 0.7843
+d 1.0000
+illum 2
+
+newmtl mat_1区-灵石基座
+Kd 0.3922 0.2431 0.0000
+d 1.0000
+illum 2
+
+newmtl mat_蓝2区
+Kd 0.5882 0.8431 0.8627
+d 1.0000
+illum 2
+
+newmtl mat_2区重试区-红
+Kd 0.8745 0.1333 0.1333
+d 1.0000
+illum 2
+
+newmtl mat_台阶-红-阶梯
+Kd 0.9216 0.7059 0.6275
+d 1.0000
+illum 2
+
+newmtl mat_台阶-红-传递区
+Kd 0.9608 0.6667 0.2353
+d 1.0000
+illum 2
+
+newmtl mat_台阶-红-坡道
+Kd 0.7843 0.5882 0.5490
+d 1.0000
+illum 2
+
+newmtl mat_天空块-蓝-1
+Kd 0.1961 0.0000 1.0000
+d 1.0000
+illum 2
+
+newmtl mat_2区重试区-蓝
+Kd 0.1961 0.0000 1.0000
+d 1.0000
+illum 2
+
+newmtl mat_二层基座
+Kd 0.7451 0.7451 0.7255
+d 1.0000
+illum 2
+
+newmtl mat_红2区
+Kd 0.9216 0.7059 0.6275
+d 1.0000
+illum 2
+
+newmtl mat_建造点-1
+Kd 0.1569 0.3922 0.1961
+d 1.0000
+illum 2
+
+newmtl mat_建造点-2
+Kd 0.1569 0.3922 0.1961
+d 1.0000
+illum 2
+
+newmtl mat_灵石
+Kd 0.8549 0.6471 0.1255
+d 1.0000
+illum 2
+
+newmtl mat_建造点-3
+Kd 0.1569 0.3922 0.1961
+d 1.0000
+illum 2
+
+newmtl mat_台阶-蓝-阶梯
+Kd 0.5882 0.8431 0.8627
+d 1.0000
+illum 2
+
+newmtl mat_台阶-蓝-传递区
+Kd 0.2353 0.6667 0.9608
+d 1.0000
+illum 2
+
+newmtl mat_台阶-蓝-坡道
+Kd 0.5098 0.7059 0.7843
+d 1.0000
+illum 2
+
+newmtl mat_2区栅栏
+Kd 0.7451 0.7451 0.7255
+d 1.0000
+illum 2
+
+newmtl mat_建造点-4
+Kd 0.1569 0.3922 0.1961
+d 1.0000
+illum 2
+
+newmtl mat_建造点-5
+Kd 0.1569 0.3922 0.1961
+d 1.0000
+illum 2
+
+newmtl mat_建造点-6
+Kd 0.1569 0.3922 0.1961
+d 1.0000
+illum 2
+
+newmtl mat_建造点-7
+Kd 0.1569 0.3922 0.1961
+d 1.0000
+illum 2
+
+newmtl mat_3区
+Kd 0.7451 0.7451 0.7255
+d 1.0000
+illum 2
+
+newmtl mat_二层台阶-红
+Kd 0.9216 0.7059 0.6275
+d 1.0000
+illum 2
+
+newmtl mat_建造点-8
+Kd 0.1569 0.3922 0.1961
+d 1.0000
+illum 2
+
+newmtl mat_二层台阶-蓝
+Kd 0.5882 0.8431 0.8627
+d 1.0000
+illum 2
+
+newmtl mat_3区-中央基座
+Kd 0.3922 0.2431 0.0000
+d 1.0000
+illum 2
+
+newmtl mat_建造点-9
+Kd 0.1569 0.3922 0.1961
+d 1.0000
+illum 2
+
+newmtl mat_建造点-10
+Kd 0.1569 0.3922 0.1961
+d 1.0000
+illum 2

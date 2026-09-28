@@ -1,0 +1,176 @@
+<?xml version="1.0"?>
+<root BTCPP_format="4" main_tree_to_execute="MeilinMissionRetry">
+
+  <!-- ================== 梅林任务 (重试版) ==================
+       与 meilin_mission.xml 一致, 但去掉了子树内部的启动等待:
+         - 删掉等 /AT_R2/meilin_mission_start 的 WaitForStart;
+         - 删掉已注释的 WaitForEnter。
+       因为重试时由外层 r2_bt_red_retry 统一等 /AT_R2/red_start_cmd 放行,
+       进入本子树后直接开始连续抓取, 不再二次等待。
+       BehaviorTree ID = MeilinMissionRetry (避免与原 MeilinMission 重名)。 -->
+
+  <!-- 子树拆分：每棵树一个文件，include 路径相对当前文件 -->
+  <include path="meilin_mission/MoveBetweenBlocks.xml"/>
+  <include path="meilin_mission/PickAtBlock.xml"/>
+  <include path="meilin_mission/PushAtBlock.xml"/>
+  <include path="meilin_mission/FinishPick.xml"/>
+
+  <!-- ================== 主树 ==================
+       每轮：先 Pop 出当前步，再 Peek 偷看下一步（写到 next_* 黑板键），
+       然后路由到 MOVE/PICK/PUSH 子树。 -->
+  <BehaviorTree ID="MeilinMissionRetry">
+    <Sequence>
+      <SetMppiParams node="{node}"
+                controller_node="/AT_R2/controller_server"
+                plugin_prefix="FollowPath"
+                goal_angle_weight="5.0"
+                wait_after_set="0.3"
+                goal_angle_threshold="2.0"
+                pathalign_use_path_orientations="false"
+                pathalign_threshold="3.0"
+                pathalign_offset_from_furthest="15"
+                wz_std="0.45"
+                vx_std="0.45"
+                vy_std="0.30"/>
+      <SetCostmapInflation node="{node}"
+                local_radius="0.1"
+                global_radius="0.15"
+                local_cost_scaling_factor="1.0"
+                global_cost_scaling_factor="4.0"/>
+      <!-- <PublishHeadCmd node="{node}" command="8"
+                            topic="/AT_R2/head_gripper_cmd"
+                            wait_done="false"/> -->
+      <PublishHeadCmd node="{node}" command="9"
+                            topic="/AT_R2/head_gripper_cmd"
+                            wait_done="false"/>
+
+      <!-- (重试版已去掉等 /AT_R2/meilin_mission_start 的 WaitForStart) -->
+
+      <!-- <PublishGoal node="{node}" x="2.3" y="3.0" yaw="0.0" frame_id="map" goal="{goal}"/> -->
+
+
+
+      <Sequence>
+        <PublishPumpCmd node="{node}" topic="/AT_R2/chassis_pump_cmd" command="1"/>
+        <SetZoneMode node="{node}" mode="2" topic="/AT_R2/zone_mode"/>
+        <GetPlan node="{node}"
+                topic="/r2_planner/plan"
+                plan="{plan}"
+                num_steps="{num_steps}"/>
+
+        <!-- PICK 计数器：用来区分第几个抓取动作（第1块放置到车上，第2块只举着） -->
+        <Script code="pick_count := 0"/>
+        <!-- 抓取收尾标志：PICK 抓完置 1，紧跟的 MOVE 做完收尾后清 0 -->
+        <Script code="need_finish := 0"/>
+        <!-- 臂 prep 排队标志：MOVE 段 C 为下一次 PICK 排队 prep 姿态后置 1，PICK 消费后清 0；
+             第一次 PICK 前没有 MOVE 时仍为 0，由 PICK 自行排队 -->
+        <Script code="arm_prep_queued := 0"/>
+        <!-- 循环迭代计数：仅在第一次迭代完成后设置一次导航参数 -->
+        <Script code="loop_idx := 0"/>
+
+        <!-- (重试版已去掉等 Enter 开始导航的 WaitForEnter) -->
+
+        <Repeat num_cycles="{num_steps}">
+          <Sequence>
+            <PopNextStep plan="{plan}"
+                        step_type="{step_type}"
+                        target_id="{target_id}"
+                        from_id="{from_id}"
+                        prep_x="{prep_x}"
+                        prep_y="{prep_y}"
+                        prep_yaw="{prep_yaw}"
+                        grasp_yaw="{grasp_yaw}"
+                        abs_dh="{abs_dh}"
+                        stair_dir="{stair_dir}"
+                        cube_x="{cube_x}"
+                        cube_y="{cube_y}"
+                        block_height="{block_h}"/>
+
+            <!-- Pop 已经把当前步从 plan 队首移走，
+                PeekNextStep 看到的就是真正的"下一步"。 -->
+            <PeekNextStep plan="{plan}"
+                          next_step_type="{next_step_type}"
+                          next_target_id="{next_target_id}"
+                          next_from_id="{next_from_id}"
+                          next_cube_x="{next_cube_x}"
+                          next_cube_y="{next_cube_y}"
+                          next_block_height="{next_block_height}"
+                          next_prep_x="{next_prep_x}"
+                          next_prep_y="{next_prep_y}"
+                          next_prep_yaw="{next_prep_yaw}"/>
+            <Switch4 variable="{step_type}"
+                    case_1="MOVE"
+                    case_2="PICK"
+                    case_3="PUSH"
+                    case_4="WAIT">
+              <SubTree ID="MoveBetweenBlocks" _autoremap="true"/>
+              <SubTree ID="PickAtBlock" _autoremap="true"/>
+              <SubTree ID="PushAtBlock" _autoremap="true"/>
+              <!-- WAIT：R1 块尚未让开，原地停一拍。delay_msec 应对齐 R2 走一步的耗时，
+                   需现场标定（与规划器 r1_removal_steps 节奏配合）。 -->
+              <DelayMs delay_msec="100">
+                <AlwaysSuccess/>
+              </DelayMs>
+              <AlwaysFailure/>
+            </Switch4>
+
+            <!-- PICK→PICK：下一步没有 MOVE 来消费 need_finish，就地补一次收尾
+                 （lift/stow/place/关泵）。next_step_type 用 Switch 路由（与全局风格一致），
+                 再用 need_finish==1 保证只有刚 PICK 完才收尾。PICK→MOVE 时不命中 PICK 分支，
+                 need_finish 仍留给 MOVE，行为不变。 -->
+            <Switch2 variable="{next_step_type}" case_1="PICK" case_2="__never__">
+              <Precondition if="need_finish == 1" else="SUCCESS">
+                <SubTree ID="FinishPick" _autoremap="true"/>
+              </Precondition>
+              <AlwaysSuccess/>
+              <AlwaysSuccess/>
+            </Switch2>
+
+            <!-- 本次迭代计数 +1，仅在第一次迭代完成后设置一次导航参数 -->
+            <Script code="loop_idx += 1"/>
+            <Precondition if="loop_idx == 1" else="SUCCESS">
+              <Sequence>
+                <SetMppiParams node="{node}"
+                          controller_node="/AT_R2/controller_server"
+                          plugin_prefix="FollowPath"
+                          goal_angle_weight="6.0"
+                          wait_after_set="0.3"
+                          goal_angle_threshold="2.0"
+                          wz_std="0.45"
+                          vx_std="0.45"
+                          vy_std="0.35"/>
+                <SetCostmapInflation node="{node}"
+                          local_radius="0.25"
+                          global_radius="0.25"
+                          local_cost_scaling_factor="1.0"
+                          global_cost_scaling_factor="4.0"/>
+              </Sequence>
+            </Precondition>
+          </Sequence>
+        </Repeat>
+      </Sequence>
+      <!-- <Sequence>
+        <SetMppiParams node="{node}"
+                controller_node="/AT_R2/controller_server"
+                plugin_prefix="FollowPath"
+                goal_angle_weight="5.0"
+                wait_after_set="0.3"
+                goal_angle_threshold="0.2"
+                wz_std="0.45"
+                vx_std="0.45"
+                vy_std="0.4"/>
+        <PublishGoal node="{node}" x="8.6" y="0.7" yaw="0.0" frame_id="map" goal="{goal}"/>
+        <PublishGoal node="{node}" x="11.5" y="0.7" yaw="0.0" frame_id="map" goal="{goal}"/>
+        <SetCostmapInflation node="{node}"
+                local_radius="0.45"
+                global_radius="0.45"
+                local_cost_scaling_factor="1.0"
+                global_cost_scaling_factor="4.0"/>
+        <PublishGoal node="{node}" x="10.7" y="4.0" yaw="0.0" frame_id="map" goal="{goal}"/>
+
+      </Sequence> -->
+    </Sequence>
+
+  </BehaviorTree>
+
+</root>

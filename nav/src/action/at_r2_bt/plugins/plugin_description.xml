@@ -1,0 +1,187 @@
+<library path="nav2_bt_publish_goal">
+  <class type="nav2_bt_publish_goal::PublishGoalAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Publishes a goal pose to /goal_pose topic and blackboard.
+      Reads x, y, yaw from XML parameters and creates a PoseStamped message.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::FollowSpinPathAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Generates a dense straight-line path from the current TF pose to a goal
+      (goal_x, goal_y, goal_yaw), with yaw interpolated only in the middle
+      segment: keeps start_yaw until rotation_start_distance from start, then
+      linearly rotates toward goal_yaw until rotation_end_distance from goal,
+      then keeps goal_yaw. rotation_direction selects 'cw' or 'ccw'. Sends the
+      path to controller_server's FollowPath action, bypassing the global
+      planner. For the robot to actually rotate during motion, the MPPI
+      controller must have PathAlignCritic.use_path_orientations = true.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::PublishGoalsAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Sends multiple goal poses to the nav2 NavigateThroughPoses action server,
+      so the global planner stitches them into a single continuous path
+      (ComputePathThroughPoses) and the controller follows it without stopping
+      at intermediate waypoints. Port "poses" is a string like
+      "x1,y1,yaw1; x2,y2,yaw2; ..." (meters, radians). Only the FINAL pose's
+      yaw is enforced by goal_checker; intermediate yaws are not strict.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::PreSteerAlignAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Publishes a small Twist on the navigation velocity topic at a fixed
+      rate (publish_rate_hz) for a short duration so swerve wheels can
+      pre-align before stair climb/descend. Sends a zero Twist when finished
+      or halted.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::SetCostmapInflationAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Updates inflation_layer.inflation_radius and
+      inflation_layer.cost_scaling_factor on nav2 local/global costmap nodes
+      at runtime via the SetParameters service.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::SetMppiParamsAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Sets selected nav2_mppi_controller parameters on controller_server at runtime
+      (parameter names plugin_prefix.key, e.g. FollowPath.batch_size) via SetParameters.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::ArmTaskAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Sends robot_interfaces/ArmTask action goal. Tries TF first (base_frame to target_frame);
+      if TF times out, uses cube_x/cube_y/block_height (in map_frame) and the live
+      base_frame to map_frame TF to compute the cube pose in base_frame, then
+      appends grasp_height.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::ArmMoveJointAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Sends robot_interfaces/ArmTask for joint-space move (default task_id=1): ports j1..j6 (rad).
+      If duration_sec is negative (default), goal.data has 6 values (arm_task uses trajectory_duration).
+      If duration_sec is non-negative, appends duration as 7th value.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::ArmMoveNamedAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Sends robot_interfaces/ArmTask for joint-space move (default task_id=1) using a
+      named pose looked up in arm_task/config/arm_position.yaml (port "name").
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::GetPlanAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Subscribes to a robot_interfaces/Plan topic (transient_local) and stores the
+      latest plan into the blackboard. Stays RUNNING until the first message
+      arrives; outputs num_steps for use by a Repeat decorator.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::PopNextStepAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Pops the front PlanStep from the shared plan vector and writes its fields
+      into independent blackboard keys (step_type, target_id, from_id, prep_x/y/yaw,
+      abs_dh, stair_dir, cube_x/y, block_height). Returns FAILURE when empty.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::PeekNextStepAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Reads (without popping) the front PlanStep of the shared plan vector and
+      writes selected fields with `next_*` prefix (next_step_type, next_from_id,
+      next_target_id, next_cube_x/y, next_block_height). Returns SUCCESS even
+      when the plan is empty (next_step_type = "NONE").
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::SelectArmPrepNameAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Reads block_blue.yaml + arm_ready_position.yaml and computes the named arm
+      preparation pose for an upcoming PICK based on (next_from_id,
+      next_target_id). The arm only reaches to the body's left, so when the
+      target is on map +y (dy > 0) and a `pick_left_<suffix>` exists in
+      arm_ready_position.yaml it is preferred; otherwise falls back to
+      `pick_front_<suffix>`. Suffix is decided by round(dh / 0.2):
+      +1 → up200, +2 → up400, -1 → down200, -2 → down400. Outputs the chosen
+      name into arm_prep_name; FAILURE if neither candidate exists.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::IsPrepSkippableCondition" base_class_type="BT::ConditionNode">
+    <description>
+      Condition node. Reads current map->base TF and compares to (target_x,
+      target_y, target_yaw); returns SUCCESS only when |dx|, |dy| and the
+      wrapped yaw error are all within their tolerances. Used to skip the
+      navigation-to-prep-pose step when the robot is already there.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::CheckRetryTopicCondition" base_class_type="BT::ConditionNode">
+    <description>
+      Condition node. Subscribes to a retry topic (std_msgs/Int32, default
+      /AT_R2/place_retry). Returns SUCCESS while no pending value; returns
+      FAILURE (latching the value 1..4 to retry_val) when an interrupt arrives,
+      so that inside a ReactiveSequence it halts a running dock/push action to
+      trigger a back-out-and-retry. Values are consumed on read and drained on
+      re-entry so only values received during an active push interrupt.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::GraspReadyByPoseDistanceCondition" base_class_type="BT::ConditionNode">
+    <description>
+      Condition node. During navigation, reads current map->base TF and
+      /AT_R2/distance (std_msgs/Float64). Returns SUCCESS only when the current
+      y range, yaw tolerance, and scaled distance range from XML ports are all
+      satisfied for stable_count consecutive ticks.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::DistanceServoAlignAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Servo-aligns the robot to a target /AT_R2/distance value using proportional
+      cmd_vel control. The published linear velocity axis is selectable from XML,
+      with an optional y-axis side press velocity scaled from the main speed.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::PublishHeadCmdAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Publishes an integer command (std_msgs/Int32) on a topic
+      (default /AT_R2/head_gripper_cmd, latched) to drive the independent
+      weapon-head gripper: 1=prepare grasp, 2=grasp, 3=dock. When wait_done is
+      true it subscribes to done_topic (default /AT_R2/head_gripper_done) and
+      stays RUNNING until the feedback value equals the sent command, or fails
+      after timeout seconds (timeout<=0 = wait forever).
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::SetZoneModeAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Publishes an integer (std_msgs/Int32) on a topic (default /AT_R2/zone_mode,
+      latched) to switch the robot working-zone mode: 1=zone 1 (grasp weapon
+      head / dock), 2=zone 2 (climb stairs / grasp blocks), 3=zone 3 (reserved).
+      Synchronous: publishes and returns SUCCESS immediately.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::WaitForEnterAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Waits for the operator to press Enter before continuing the behavior tree.
+      Useful to pre-run setup nodes before a competition start signal, then
+      release navigation immediately from the terminal.
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::WaitForStartAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      Start gate that releases the behavior tree on either the operator pressing
+      Enter or a std_msgs/Int32 arriving on start_topic (default /AT_R2/start_cmd)
+      whose value equals start_value (default 1). Whichever fires first continues
+      the tree. When stdin is not a TTY the Enter branch is skipped and only the
+      topic branch is active. Set enable_topic=false to disable the topic branch
+      entirely (Enter-only, equivalent to WaitForEnter).
+    </description>
+  </class>
+  <class type="nav2_bt_publish_goal::WaitGraspResultAction" base_class_type="BT::ActionNodeBase">
+    <description>
+      After closing the weapon-head gripper, waits for a grasp result decided by
+      the COMBINATION of two std_msgs/Int32 topics (topic_a default
+      /AT_R2/meilin_mission_start, topic_b default /AT_R2/zone3_cmd). It keeps the
+      latest post-start value of each and, once both have been received, returns
+      SUCCESS when topic_a==success_a(1) AND topic_b==success_b(0), FAILURE when
+      topic_a==fail_a(0) AND topic_b==fail_b(1); any other combination keeps
+      waiting (RUNNING). On timeout (>0) returns timeout_result (default FAILURE).
+      Placed at the tail of a RetryUntilSuccessful sub-tree so a failed grasp
+      re-runs the laser-align + grasp steps.
+    </description>
+  </class>
+</library>
