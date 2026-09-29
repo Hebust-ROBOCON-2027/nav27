@@ -44,3 +44,9 @@ __pycache__/
 .ros/
 core
 core.*
+
+# IDE 数据（CodeBuddy）
+.codebuddy/
+
+# 点云地图大文件（Point-LIO 产物）
+*.pcd
