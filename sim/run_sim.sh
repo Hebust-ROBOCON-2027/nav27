@@ -16,8 +16,8 @@ usage() {
   echo ""
   echo "选项:"
   echo "  -b, --build       启动前先 colcon build 仿真工作空间"
-  echo "  --red             红方出发点 (默认, (-4.75, -5.15))"
-  echo "  --blue            蓝方出发点 (4.75, -5.15)"
+  echo "  --red             红方出发点 (默认, (-4.75, -5.00))"
+  echo "  --blue            蓝方出发点 (4.75, -5.00)"
   echo "  -h, --help        显示帮助信息"
 }
 

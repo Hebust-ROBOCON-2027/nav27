@@ -5,7 +5,7 @@ robots:
     - name: "AT_R2"
       color: "red"
       x_pose: "-4.75"
-      y_pose: "-5.15"
+      y_pose: "-5.00"
       z_pose: "0.15"
       yaw: "1.5708"
 
@@ -13,7 +13,7 @@ robots:
     - name: "AT_R2"
       color: "red"
       x_pose: "-4.75"
-      y_pose: "-5.15"
+      y_pose: "-5.00"
       z_pose: "0.15"
       yaw: "1.5708"
 
@@ -21,7 +21,7 @@ robots:
     - name: "AT_R2"
       color: "blue"
       x_pose: "4.75"
-      y_pose: "-5.15"
+      y_pose: "-5.00"
       z_pose: "0.15"
       yaw: "1.5708"
 

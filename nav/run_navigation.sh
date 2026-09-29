@@ -18,8 +18,8 @@ usage() {
   echo "选项:"
   echo "  -b, --build       启动前先 colcon build 导航工作空间"
   echo "  -p, --packages    仅 build 指定的包，例如: -p \"at_r2_nav_bringup point_lio\""
-  echo "  --red             红方出发点配置 (默认, (-4.75, -5.15))"
-  echo "  --blue            蓝方出发点配置 (4.75, -5.15)"
+  echo "  --red             红方出发点配置 (默认, (-4.75, -5.00))"
+  echo "  --blue            蓝方出发点配置 (4.75, -5.00)"
   echo "  -h, --help        显示帮助信息"
   echo "  --                后续参数原样传给 ros2 launch"
 }
