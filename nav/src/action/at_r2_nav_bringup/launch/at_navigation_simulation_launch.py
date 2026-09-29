@@ -189,6 +189,24 @@ def generate_launch_description():
         }.items(),
     )
 
+    start_zone_adaptive_controller = Node(
+        package="at_r2_nav_bringup",
+        executable="zone_adaptive_controller.py",
+        name="zone_adaptive_controller",
+        output="screen",
+        namespace=namespace,
+        remappings=[
+            ("/tf", "tf"),
+            ("/tf_static", "tf_static"),
+        ],
+        parameters=[{
+            "namespace": namespace,
+            "use_sim_time": use_sim_time,
+            "map_frame": "map",
+            "robot_base_frame": "chassis",
+        }],
+    )
+
     ld = LaunchDescription()
 
     ld.add_action(declare_namespace_cmd)
@@ -208,6 +226,7 @@ def generate_launch_description():
 
     ld.add_action(start_robot_state_publisher_cmd)
     ld.add_action(start_ign_pointcloud_converter)
+    ld.add_action(start_zone_adaptive_controller)
     ld.add_action(bringup_cmd)
     ld.add_action(rviz_cmd)
 

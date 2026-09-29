@@ -108,19 +108,35 @@
           </box>
         </geometry>
       </collision>
-      <collision name="col_l1fence_e">
-        <pose>2.975 0 0.675 0 0 0</pose>
+      <collision name="col_l1fence_e_north">
+        <pose>2.975 1.075 0.675 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.050 5.900 0.100</size>
+            <size>0.050 3.750 0.100</size>
           </box>
         </geometry>
       </collision>
-      <collision name="col_l1fence_w">
-        <pose>-2.975 0 0.675 0 0 0</pose>
+      <collision name="col_l1fence_e_south">
+        <pose>2.975 -2.375 0.675 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.050 5.900 0.100</size>
+            <size>0.050 1.150 0.100</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_l1fence_w_north">
+        <pose>-2.975 1.075 0.675 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.050 3.750 0.100</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="col_l1fence_w_south">
+        <pose>-2.975 -2.375 0.675 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.050 1.150 0.100</size>
           </box>
         </geometry>
       </collision>

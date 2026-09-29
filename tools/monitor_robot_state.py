@@ -21,6 +21,7 @@ from rclpy.qos import QoSProfile, DurabilityPolicy, HistoryPolicy
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from rosgraph_msgs.msg import Clock
+from std_msgs.msg import String
 
 
 def euler_from_quaternion(x, y, z, w):
@@ -90,6 +91,10 @@ class RobotStateMonitor(Node):
         self.sim_time_sec = 0.0
         self.clock_received = False
 
+        # 导航区域监控
+        self.current_nav_zone = "GROUND (默认)"
+        self.create_subscription(String, f"{self.prefix}/current_nav_zone", self.zone_callback, 10)
+
         # 订阅话题
         cmd_topic = f"{self.prefix}/cmd_vel_nav2_result"
         odom_topic = f"{self.prefix}/odom"
@@ -101,6 +106,9 @@ class RobotStateMonitor(Node):
 
         # 定时打印定时器 (10 Hz)
         self.timer = self.create_timer(0.1, self.update_and_render)
+
+    def zone_callback(self, msg: String):
+        self.current_nav_zone = msg.data
 
     def clock_callback(self, msg: Clock):
         self.sim_time_sec = msg.clock.sec + msg.clock.nanosec * 1e-9
@@ -180,7 +188,14 @@ class RobotStateMonitor(Node):
             clock_str = f"\033[1;32m{self.sim_time_sec:8.2f}s (仿真时钟同步正常)\033[0m"
         else:
             clock_str = "\033[1;33m未收到 /clock (请确认仿真是否已启动)\033[0m"
+        
+        if "RAMP" in self.current_nav_zone or "PLATFORM" in self.current_nav_zone:
+            zone_str = f"\033[1;43;30m 【坡道与高台模式】(RAMP_PLATFORM: 限速0.9m/s, 禁横移, 膨胀0.30m) \033[0m"
+        else:
+            zone_str = f"\033[1;42;37m 【平地地面模式】(GROUND: 全速2.0m/s, 膨胀0.48m) \033[0m"
+
         lines.append(f"  命名空间: \033[1;33m{self.prefix or '/'}\033[0m   |   仿真时钟: {clock_str}")
+        lines.append(f"  当前自适应模式: {zone_str}")
         lines.append("-" * 72)
 
         # 2. 全局位置 (map 坐标系)

@@ -129,10 +129,10 @@ void MecanumDrive2::Configure(const Entity &_entity,
     this->dataPtr->odomPub = this->dataPtr->node.Advertise<msgs::Odometry>(odomTopic);
     this->dataPtr->odomFrameId=this->dataPtr->model.Name(_ecm) + "/odom" ;
     this->dataPtr->odomChildFrameId = this->dataPtr->model.Name(_ecm) + "/" + ignition::common::replaceAll(this->dataPtr->chassisLinkName, "::", "/");
-    //init PID
-    this->dataPtr->xPid.Init(100, 0, 0, 0, 0, 100, -100, 0);
-    this->dataPtr->yPid.Init(500, 0, 0, 0, 0, 200, -200, 0);
-    this->dataPtr->wPid.Init(200, 0, 0, 0, 0, 100, -100, 0);
+    //init PID (boosted force limits and integral term for slope climbing)
+    this->dataPtr->xPid.Init(200, 1.0, 0, 50, -50, 400, -400, 0);
+    this->dataPtr->yPid.Init(500, 1.0, 0, 50, -50, 400, -400, 0);
+    this->dataPtr->wPid.Init(200, 0.5, 0, 30, -30, 200, -200, 0);
 }
 
 void MecanumDrive2::PreUpdate(const ignition::gazebo::UpdateInfo &_info,

@@ -15,6 +15,7 @@ endif()
 
 install(PROGRAMS
   scripts/controller_switcher.py
+  scripts/zone_adaptive_controller.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
